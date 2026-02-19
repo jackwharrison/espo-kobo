@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kobo to EspoCRM Bridge</title>
+    <title>Meta Mapper</title>
     <style>
         * {
             margin: 0;
@@ -16,6 +17,7 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             padding: 20px;
@@ -30,6 +32,17 @@
             padding: 40px;
         }
 
+        .logo-wrapper {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .logo-wrapper img {
+            max-height: 300px;
+            max-width: 600px;
+            object-fit: contain;
+        }
+
         h1 {
             color: #333;
             margin-bottom: 6px;
@@ -42,22 +55,151 @@
             font-size: 14px;
         }
 
-        /* Drop zone */
+        .question-section {
+            margin-bottom: 32px;
+            padding-bottom: 28px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .question-section:last-of-type {
+            border-bottom: none;
+        }
+
+        .question-label {
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 14px;
+            display: block;
+        }
+
+        .option-cards {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .option-card {
+            flex: 1;
+            min-width: 140px;
+            padding: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .option-card:hover {
+            border-color: #667eea;
+            background: #f8f7ff;
+        }
+
+        .option-card input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .option-card.selected {
+            border-color: #667eea;
+            background: #f0eeff;
+        }
+
+        .option-icon {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .option-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .option-card.selected .option-title {
+            color: #667eea;
+        }
+
+        .option-desc {
+            font-size: 12px;
+            color: #999;
+            line-height: 1.4;
+        }
+
+        .conditional-section {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: #fafafa;
+            border-radius: 12px;
+            border: 1px solid #e8e8e8;
+        }
+
+        .conditional-section.active {
+            display: block;
+        }
+
+        .section-header {
+            font-size: 13px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #444;
+            margin-bottom: 6px;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="url"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .help-text {
+            font-size: 11px;
+            color: #999;
+            margin-top: 4px;
+        }
+
         .drop-zone {
             border: 2px dashed #c0b4f0;
             border-radius: 12px;
-            padding: 40px 20px;
+            padding: 32px 20px;
             text-align: center;
             cursor: pointer;
             transition: all 0.2s;
-            background: #fafafa;
+            background: white;
             position: relative;
         }
 
-        .drop-zone:hover,
-        .drop-zone.dragover {
+        .drop-zone:hover {
             border-color: #667eea;
-            background: #f0eeff;
+            background: #f8f7ff;
         }
 
         .drop-zone input[type="file"] {
@@ -67,47 +209,46 @@
             cursor: pointer;
             width: 100%;
             height: 100%;
+            border: none;
+            padding: 0;
         }
 
         .drop-zone-icon {
-            font-size: 40px;
-            margin-bottom: 12px;
+            font-size: 36px;
+            margin-bottom: 10px;
         }
 
         .drop-zone-text {
             color: #555;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 600;
         }
 
         .drop-zone-subtext {
             color: #aaa;
-            font-size: 12px;
-            margin-top: 6px;
+            font-size: 11px;
+            margin-top: 4px;
         }
 
-        /* File list */
         .file-list {
-            margin-top: 20px;
+            margin-top: 16px;
             display: none;
         }
 
-        .file-list-header {
-            font-size: 13px;
-            font-weight: 600;
-            color: #555;
-            margin-bottom: 10px;
+        .file-list.active {
+            display: block;
         }
 
         .file-item {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 10px 14px;
-            background: #f5f5f5;
+            padding: 10px 12px;
+            background: white;
             border-radius: 8px;
             margin-bottom: 6px;
             font-size: 13px;
+            border: 1px solid #e0e0e0;
         }
 
         .file-item-name {
@@ -116,10 +257,6 @@
             gap: 8px;
             color: #333;
             font-weight: 500;
-            overflow: hidden;
-            white-space: nowrap;
-            text-overflow: ellipsis;
-            max-width: 80%;
         }
 
         .file-item-remove {
@@ -128,28 +265,15 @@
             color: #aaa;
             cursor: pointer;
             font-size: 16px;
-            padding: 2px 6px;
+            padding: 4px 8px;
             border-radius: 4px;
-            flex-shrink: 0;
         }
 
         .file-item-remove:hover {
-            background: #eee;
+            background: #f5f5f5;
             color: #666;
         }
 
-        .file-count-badge {
-            display: inline-block;
-            background: #667eea;
-            color: white;
-            font-size: 11px;
-            font-weight: 700;
-            padding: 2px 8px;
-            border-radius: 20px;
-            margin-left: 8px;
-        }
-
-        /* Alert */
         .alert {
             padding: 12px 16px;
             border-radius: 8px;
@@ -164,19 +288,12 @@
             color: #c33;
         }
 
-        .alert.warning {
-            background: #fffbea;
-            border: 1px solid #f5d76e;
-            color: #7a5c00;
-        }
-
         .alert.success {
             background: #f0fff4;
             border: 1px solid #b2f5c8;
             color: #1a6b35;
         }
 
-        /* Button */
         .button {
             width: 100%;
             padding: 14px;
@@ -188,7 +305,7 @@
             font-weight: 600;
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
-            margin-top: 24px;
+            margin-top: 28px;
         }
 
         .button:hover:not(:disabled) {
@@ -201,11 +318,44 @@
             cursor: not-allowed;
         }
 
-        /* Loading */
+        footer {
+            max-width: 640px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 4px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.75);
+        }
+
+        footer a {
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.15s;
+        }
+
+        footer a:hover {
+            color: white;
+        }
+
+        .footer-github svg {
+            width: 15px;
+            height: 15px;
+            fill: currentColor;
+        }
+
         .loading {
             display: none;
             text-align: center;
             margin-top: 20px;
+        }
+
+        .loading.active {
+            display: block;
         }
 
         .spinner {
@@ -226,328 +376,274 @@
             font-size: 13px;
             color: #888;
         }
-
-        /* Validation results */
-        .validation-results {
-            margin-top: 20px;
-            display: none;
-        }
-
-        .validation-item {
-            padding: 12px 14px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            font-size: 13px;
-        }
-
-        .validation-item.valid {
-            background: #f0fff4;
-            border: 1px solid #b2f5c8;
-        }
-
-        .validation-item.invalid {
-            background: #fff0f0;
-            border: 1px solid #fcc;
-        }
-
-        .validation-item-header {
-            font-weight: 600;
-            margin-bottom: 4px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .validation-item-detail {
-            color: #666;
-            margin-top: 4px;
-        }
-
-        .warning-list {
-            margin-top: 6px;
-            padding-left: 16px;
-            color: #7a5c00;
-        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🔄 Kobo → EspoCRM</h1>
-        <p class="subtitle">Upload one or more XLSForms to generate EspoCRM extension packages</p>
+        <div class="logo-wrapper">
+            <img src="/static/logo.png" alt="Logo">
+        </div>
+        <h1>Kobo → EspoCRM</h1>
+        <p class="subtitle">Automatically sync your KoboToolbox forms to EspoCRM</p>
 
         <div id="alert" class="alert"></div>
 
-        <form id="koboForm" enctype="multipart/form-data">
-
-            <!-- Drop Zone -->
-            <div class="drop-zone" id="dropZone">
-                <input type="file" id="xlsforms" name="xlsforms" accept=".xls,.xlsx" multiple>
-                <div class="drop-zone-icon">📂</div>
-                <div class="drop-zone-text">Drop XLSForm files here or click to browse</div>
-                <div class="drop-zone-subtext">Supports .xls and .xlsx &nbsp;·&nbsp; Multiple files allowed</div>
-            </div>
-
-            <!-- File List -->
-            <div class="file-list" id="fileList">
-                <div class="file-list-header">
-                    Selected files <span class="file-count-badge" id="fileCount">0</span>
+        <form id="mainForm">
+            <div class="question-section">
+                <label class="question-label">How would you like to deploy the entities?</label>
+                <div class="option-cards">
+                    <div class="option-card" data-option="deploy-method" data-value="direct">
+                        <input type="radio" name="deployMethod" value="direct">
+                        <div class="option-icon">⚡</div>
+                        <div class="option-title">Create Directly</div>
+                        <div class="option-desc">Automatically create entities in your EspoCRM instance</div>
+                    </div>
+                    <div class="option-card" data-option="deploy-method" data-value="package">
+                        <input type="radio" name="deployMethod" value="package">
+                        <div class="option-icon">📦</div>
+                        <div class="option-title">Download Package</div>
+                        <div class="option-desc">Generate extension package to install manually</div>
+                    </div>
                 </div>
-                <div id="fileItems"></div>
+
+                <div id="espoCredentialsSection" class="conditional-section">
+                    <div class="section-header">🔐 EspoCRM Instance Details</div>
+                    <div class="form-group">
+                        <label for="espoUrl">EspoCRM URL</label>
+                        <input type="url" id="espoUrl" placeholder="https://your-espo-instance.com">
+                        <div class="help-text">The full URL of your EspoCRM installation</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="espoUsername">Admin Username</label>
+                        <input type="text" id="espoUsername" placeholder="admin">
+                    </div>
+                    <div class="form-group">
+                        <label for="espoPassword">Admin Password</label>
+                        <input type="password" id="espoPassword" placeholder="••••••••">
+                        <div class="help-text">Required for API access to create entities</div>
+                    </div>
+                </div>
             </div>
 
-            <!-- Validation Results Preview -->
-            <div class="validation-results" id="validationResults"></div>
+            <div class="question-section">
+                <label class="question-label">How would you like to provide the form data?</label>
+                <div class="option-cards">
+                    <div class="option-card" data-option="data-source" data-value="upload">
+                        <input type="radio" name="dataSource" value="upload">
+                        <div class="option-icon">📂</div>
+                        <div class="option-title">Upload XLSForm</div>
+                        <div class="option-desc">Upload your Kobo form file(s) from your computer</div>
+                    </div>
+                    <div class="option-card" data-option="data-source" data-value="kobo-api">
+                        <input type="radio" name="dataSource" value="kobo-api">
+                        <div class="option-icon">🔗</div>
+                        <div class="option-title">Link Kobo Account</div>
+                        <div class="option-desc">Connect directly to your KoboToolbox account</div>
+                    </div>
+                </div>
+
+                <div id="xlsUploadSection" class="conditional-section">
+                    <div class="section-header">📄 Upload Form Files</div>
+                    <div class="drop-zone" id="dropZone">
+                        <input type="file" id="xlsforms" name="xlsforms" accept=".xls,.xlsx" multiple>
+                        <div class="drop-zone-icon">📂</div>
+                        <div class="drop-zone-text">Drop XLSForm files here or click to browse</div>
+                        <div class="drop-zone-subtext">Supports .xls and .xlsx · Multiple files allowed</div>
+                    </div>
+                    <div class="file-list" id="fileList">
+                        <div id="fileItems"></div>
+                    </div>
+                </div>
+
+                <div id="koboApiSection" class="conditional-section">
+                    <div class="section-header">🔗 KoboToolbox Connection</div>
+                    <div class="form-group">
+                        <label for="koboAssetId">Asset ID</label>
+                        <input type="text" id="koboAssetId" placeholder="aBC123xyz">
+                        <div class="help-text">Found in your form's URL on KoboToolbox</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="koboToken">API Token</label>
+                        <input type="password" id="koboToken" placeholder="Your KoboToolbox API token">
+                        <div class="help-text">Get this from your Kobo account settings</div>
+                    </div>
+                </div>
+            </div>
 
             <button type="submit" class="button" id="submitBtn" disabled>
-                Generate Extension Package(s)
+                Generate Entities
             </button>
-        </form>
 
-        <div class="loading" id="loading">
-            <div class="spinner"></div>
-            <p id="loadingText">Generating your extension(s)...</p>
-        </div>
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Processing...</p>
+            </div>
+        </form>
     </div>
 
+    <footer>
+        <a href="mailto:jharrison@redcross.nl">✉ For assistance: jharrison@redcross.nl</a>
+        <a href="https://github.com/jackwharrison/espo-kobo" target="_blank" class="footer-github">
+            <svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            GitHub
+        </a>
+    </footer>
+
     <script>
-        const form = document.getElementById('koboForm');
+        let selectedFiles = [];
+        let deployMethod = null;
+        let dataSource = null;
         const alertEl = document.getElementById('alert');
-        const loading = document.getElementById('loading');
         const submitBtn = document.getElementById('submitBtn');
-        const dropZone = document.getElementById('dropZone');
+        const loading = document.getElementById('loading');
+
+        function updateConditionalSections() {
+            document.getElementById('espoCredentialsSection').classList.toggle('active', deployMethod === 'direct');
+            document.getElementById('xlsUploadSection').classList.toggle('active', dataSource === 'upload');
+            document.getElementById('koboApiSection').classList.toggle('active', dataSource === 'kobo-api');
+            updateSubmitButton();
+        }
+
+        function updateSubmitButton() {
+            let canSubmit = false;
+            let buttonText = 'Generate Entities';
+
+            if (deployMethod && dataSource) {
+                if (dataSource === 'upload') {
+                    canSubmit = selectedFiles.length > 0;
+                    buttonText = deployMethod === 'direct' 
+                        ? `Create ${selectedFiles.length} Entit${selectedFiles.length === 1 ? 'y' : 'ies'} in EspoCRM`
+                        : 'Download Extension Package';
+                } else {
+                    const assetId = document.getElementById('koboAssetId').value.trim();
+                    const token = document.getElementById('koboToken').value.trim();
+                    canSubmit = assetId && token;
+                    buttonText = deployMethod === 'direct' ? 'Create Entity in EspoCRM' : 'Download Extension Package';
+                }
+            }
+
+            submitBtn.disabled = !canSubmit;
+            submitBtn.textContent = buttonText;
+        }
+
+        document.querySelectorAll('.option-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const option = card.dataset.option;
+                const value = card.dataset.value;
+                card.querySelector('input').checked = true;
+                document.querySelectorAll(`.option-card[data-option="${option}"]`).forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                if (option === 'deploy-method') deployMethod = value;
+                else dataSource = value;
+                updateConditionalSections();
+            });
+        });
+
         const fileInput = document.getElementById('xlsforms');
         const fileList = document.getElementById('fileList');
         const fileItems = document.getElementById('fileItems');
-        const fileCount = document.getElementById('fileCount');
-        const validationResults = document.getElementById('validationResults');
 
-        let selectedFiles = [];
-
-        function showAlert(message, type) {
-            alertEl.className = `alert ${type}`;
-            alertEl.textContent = message;
-            alertEl.style.display = 'block';
-            if (type === 'success') setTimeout(() => alertEl.style.display = 'none', 6000);
-        }
-
-        function hideAlert() {
-            alertEl.style.display = 'none';
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                const ext = file.name.split('.').pop().toLowerCase();
+                if (['xls', 'xlsx'].includes(ext) && !selectedFiles.find(f => f.name === file.name)) {
+                    selectedFiles.push(file);
+                }
+            });
+            updateFileList();
         }
 
         function updateFileList() {
-            fileItems.innerHTML = '';
-            fileCount.textContent = selectedFiles.length;
-
             if (selectedFiles.length === 0) {
-                fileList.style.display = 'none';
-                submitBtn.disabled = true;
-                validationResults.style.display = 'none';
-                return;
-            }
-
-            fileList.style.display = 'block';
-            submitBtn.disabled = false;
-
-            selectedFiles.forEach((file, index) => {
-                const item = document.createElement('div');
-                item.className = 'file-item';
-                item.innerHTML = `
-                    <div class="file-item-name">
-                        📄 ${file.name}
-                    </div>
-                    <button type="button" class="file-item-remove" data-index="${index}" title="Remove">✕</button>
-                `;
-                fileItems.appendChild(item);
-            });
-
-            // Attach remove listeners
-            document.querySelectorAll('.file-item-remove').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const index = parseInt(e.target.dataset.index);
-                    selectedFiles.splice(index, 1);
-                    updateFileList();
-                    syncFileInput();
-                });
-            });
-
-            // Auto-validate when files change
-            validateFiles();
-        }
-
-        function syncFileInput() {
-            // Create a new DataTransfer to sync selectedFiles back to the input
-            const dt = new DataTransfer();
-            selectedFiles.forEach(f => dt.items.add(f));
-            fileInput.files = dt.files;
-        }
-
-        function handleNewFiles(newFiles) {
-            const allowed = ['xls', 'xlsx'];
-            const invalid = [];
-
-            Array.from(newFiles).forEach(file => {
-                const ext = file.name.split('.').pop().toLowerCase();
-                if (!allowed.includes(ext)) {
-                    invalid.push(file.name);
-                } else {
-                    // Avoid duplicates by name
-                    if (!selectedFiles.find(f => f.name === file.name)) {
-                        selectedFiles.push(file);
-                    }
-                }
-            });
-
-            if (invalid.length > 0) {
-                showAlert(`Skipped invalid file(s): ${invalid.join(', ')}`, 'warning');
+                fileList.classList.remove('active');
             } else {
-                hideAlert();
+                fileList.classList.add('active');
+                fileItems.innerHTML = selectedFiles.map((file, i) => 
+                    `<div class="file-item"><div class="file-item-name">📄 ${file.name}</div><button type="button" class="file-item-remove" data-index="${i}">✕</button></div>`
+                ).join('');
+                document.querySelectorAll('.file-item-remove').forEach(btn => {
+                    btn.addEventListener('click', e => {
+                        selectedFiles.splice(parseInt(e.target.dataset.index), 1);
+                        updateFileList();
+                    });
+                });
             }
-
-            updateFileList();
-            syncFileInput();
+            updateSubmitButton();
         }
 
-        // File input change
-        fileInput.addEventListener('change', (e) => {
-            handleNewFiles(e.target.files);
-        });
-
-        // Drag and drop
-        dropZone.addEventListener('dragover', (e) => {
+        fileInput.addEventListener('change', e => handleFiles(e.target.files));
+        document.getElementById('dropZone').addEventListener('dragover', e => e.preventDefault());
+        document.getElementById('dropZone').addEventListener('drop', e => {
             e.preventDefault();
-            dropZone.classList.add('dragover');
+            handleFiles(e.dataTransfer.files);
         });
+        document.getElementById('koboAssetId').addEventListener('input', updateSubmitButton);
+        document.getElementById('koboToken').addEventListener('input', updateSubmitButton);
 
-        dropZone.addEventListener('dragleave', () => {
-            dropZone.classList.remove('dragover');
-        });
-
-        dropZone.addEventListener('drop', (e) => {
+        document.getElementById('mainForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            dropZone.classList.remove('dragover');
-            handleNewFiles(e.dataTransfer.files);
-        });
-
-        async function validateFiles() {
-            if (selectedFiles.length === 0) return;
-
-            const formData = new FormData();
-            selectedFiles.forEach(f => formData.append('xlsforms', f));
-
-            try {
-                const response = await fetch('/validate', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const data = await response.json();
-                if (!data.results) return;
-
-                validationResults.style.display = 'block';
-                validationResults.innerHTML = '';
-
-                data.results.forEach(result => {
-                    const item = document.createElement('div');
-                    item.className = `validation-item ${result.valid ? 'valid' : 'invalid'}`;
-
-                    if (result.valid) {
-                        const warningsHtml = result.warnings.length > 0
-                            ? `<ul class="warning-list">${result.warnings.map(w => `<li>⚠ ${w}</li>`).join('')}</ul>`
-                            : '';
-
-                        item.innerHTML = `
-                            <div class="validation-item-header">
-                                ✅ ${result.filename}
-                            </div>
-                            <div class="validation-item-detail">
-                                Entity: <strong>${result.entityName}</strong> &nbsp;·&nbsp;
-                                Fields: <strong>${result.fieldCount}</strong>
-                            </div>
-                            ${warningsHtml}
-                        `;
-                    } else {
-                        item.innerHTML = `
-                            <div class="validation-item-header">
-                                ❌ ${result.filename}
-                            </div>
-                            <div class="validation-item-detail">${result.error}</div>
-                        `;
-                    }
-
-                    validationResults.appendChild(item);
-                });
-
-            } catch (err) {
-                console.error('Validation error:', err);
-            }
-        }
-
-        // Form submit
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            hideAlert();
-
-            if (selectedFiles.length === 0) {
-                showAlert('Please upload at least one XLS form file', 'error');
-                return;
-            }
-
-            loading.style.display = 'block';
+            loading.classList.add('active');
             submitBtn.disabled = true;
-
-            const loadingText = document.getElementById('loadingText');
-            loadingText.textContent = selectedFiles.length > 1
-                ? `Generating ${selectedFiles.length} extension packages...`
-                : 'Generating your extension...';
+            alertEl.style.display = 'none';
 
             try {
                 const formData = new FormData();
-                selectedFiles.forEach(f => formData.append('xlsforms', f));
-
-                const response = await fetch('/generate-extension', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error || 'Failed to generate extension(s)');
+                formData.append('dataSource', dataSource);
+                
+                if (dataSource === 'upload') {
+                    selectedFiles.forEach(f => formData.append('xlsforms', f));
+                } else {
+                    formData.append('koboAssetId', document.getElementById('koboAssetId').value);
+                    formData.append('koboToken', document.getElementById('koboToken').value);
                 }
-
-                // Determine filename from headers
-                const disposition = response.headers.get('content-disposition') || '';
-                const filenameMatch = disposition.match(/filename="?([^"]+)"?/);
-                const downloadName = filenameMatch
-                    ? filenameMatch[1]
-                    : selectedFiles.length > 1
-                        ? 'espo_extensions_bundle.zip'
-                        : 'espo_extension.zip';
-
-                // Trigger download
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = downloadName;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-
-                const msg = selectedFiles.length > 1
-                    ? `${selectedFiles.length} extension packages bundled and downloaded!`
-                    : 'Extension package downloaded!';
-                showAlert(`✅ ${msg} Install via EspoCRM Administration → Extensions.`, 'success');
-
-                // Reset form
+                
+                let endpoint, successMessage;
+                
+                if (deployMethod === 'direct') {
+                    endpoint = '/deploy-direct';
+                    formData.append('espoUrl', document.getElementById('espoUrl').value);
+                    formData.append('espoUsername', document.getElementById('espoUsername').value);
+                    formData.append('espoPassword', document.getElementById('espoPassword').value);
+                    
+                    const response = await fetch(endpoint, { method: 'POST', body: formData });
+                    if (!response.ok) throw new Error((await response.json()).error || 'Failed to deploy');
+                    
+                    const result = await response.json();
+                    successMessage = `✅ Successfully created ${result.results.length} entit${result.results.length === 1 ? 'y' : 'ies'} in EspoCRM!`;
+                } else {
+                    endpoint = '/generate-package';
+                    const response = await fetch(endpoint, { method: 'POST', body: formData });
+                    if (!response.ok) throw new Error((await response.json()).error || 'Failed to generate');
+                    
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'espo_extension.zip';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    
+                    successMessage = '✅ Extension package downloaded! Install via EspoCRM Administration → Extensions.';
+                }
+                
+                alertEl.className = 'alert success';
+                alertEl.textContent = successMessage;
+                alertEl.style.display = 'block';
+                
                 selectedFiles = [];
                 updateFileList();
-                form.reset();
-
+                document.getElementById('mainForm').reset();
+                deployMethod = null;
+                dataSource = null;
+                document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+                updateConditionalSections();
+                
             } catch (error) {
-                showAlert(error.message, 'error');
+                alertEl.className = 'alert error';
+                alertEl.textContent = error.message;
+                alertEl.style.display = 'block';
             } finally {
-                loading.style.display = 'none';
+                loading.classList.remove('active');
                 submitBtn.disabled = false;
             }
         });
