@@ -11,12 +11,16 @@ from extension_generator import build_entity_files
 from validators import validate_package_safety, ValidationError
 from espo_api import deploy_entity_to_espo, EspoAPIError
 
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 64 * 1024 * 1024
 app.config['UPLOAD_FOLDER'] = tempfile.gettempdir()
+
+# Register webhook blueprint
+
 
 ALLOWED_EXTENSIONS = {'xls', 'xlsx'}
 
@@ -50,6 +54,9 @@ def deploy_direct():
         
         # Get form data based on source
         kobo_forms = []
+        kobo_url = None
+        kobo_token = None
+        kobo_asset_id = None
         
         if data_source == 'upload':
             # XLS file upload
@@ -161,6 +168,43 @@ def deploy_direct():
                     'method': 'package',
                     'warnings': validation_result.get('warnings', [])
                 })
+                
+                # Setup Kobo Connect REST service if requested (only for Kobo API source)
+                if data_source == 'kobo-api' and data.get('setupRestService') == 'true':
+                    try:
+                        from kobo_connect_setup import setup_kobo_connect_rest_service, get_field_mapping_from_kobo_data
+                        
+                        espo_api_key = data.get('espoApiKey', '').strip()
+                        if not espo_api_key:
+                            print("\n⚠️  Warning: No EspoCRM API key provided, skipping REST service setup")
+                        else:
+                            print(f"\n[7] Setting up Kobo Connect REST service...")
+                            
+                            # Generate field mapping
+                            field_mapping = get_field_mapping_from_kobo_data(
+                                form_info['data'],
+                                entity_name
+                            )
+                            
+                            # Setup REST service
+                            rest_service = setup_kobo_connect_rest_service(
+                                kobo_url=kobo_url,
+                                api_token=kobo_token,
+                                asset_id=kobo_asset_id,
+                                entity_name=f"C{entity_name}",  # Add C prefix for EspoCRM
+                                field_mapping=field_mapping,
+                                espo_url=espo_url,
+                                espo_api_key=espo_api_key
+                            )
+                            
+                            results[-1]['rest_service_id'] = rest_service.get('uid')
+                            results[-1]['rest_service_name'] = rest_service.get('name')
+                            
+                            print(f"✓ REST service configured successfully")
+                    
+                    except Exception as e:
+                        print(f"\n✗ Warning: Failed to setup REST service: {str(e)}")
+                        results[-1]['rest_service_error'] = str(e)
                 
             except (ValidationError, EspoAPIError) as e:
                 print(f"\n✗ Deployment failed for {form_info['source']}: {str(e)}")

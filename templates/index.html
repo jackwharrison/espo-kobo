@@ -1,13 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" href="{{ url_for('static', filename='favicon-16.png') }}" sizes="16x16" type="image/png">
-    <link rel="icon" href="{{ url_for('static', filename='favicon-32.png') }}?v=3" sizes="32x32" type="image/png">
-    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
-    <link rel="apple-touch-icon" href="{{ url_for('static', filename='apple-touch-icon.png') }}" sizes="180x180">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MetaMapper</title>
+    <title>Kobo to EspoCRM Bridge</title>
     <style>
         * {
             margin: 0;
@@ -41,8 +37,8 @@
         }
 
         .logo-wrapper img {
-            max-height: 300px;
-            max-width: 600px;
+            max-height: 60px;
+            max-width: 220px;
             object-fit: contain;
         }
 
@@ -196,6 +192,56 @@
             background-repeat: no-repeat;
             background-position: right 12px center;
             padding-right: 36px;
+        }
+
+        .toggle-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .toggle-label input[type="checkbox"] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: #ccc;
+            border-radius: 24px;
+            transition: background 0.3s;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+
+        .toggle-slider::before {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: white;
+            top: 3px;
+            left: 3px;
+            transition: transform 0.3s;
+        }
+
+        .toggle-label input:checked + .toggle-slider {
+            background: #667eea;
+        }
+
+        .toggle-label input:checked + .toggle-slider::before {
+            transform: translateX(20px);
+        }
+
+        .toggle-text {
+            font-weight: 500;
+            color: #333;
         }
 
         .drop-zone {
@@ -395,7 +441,7 @@
         <div class="logo-wrapper">
             <img src="/static/logo.png" alt="Logo">
         </div>
-        <h1>Kobo → EspoCRM</h1>
+        <h1>🔄 Kobo → EspoCRM</h1>
         <p class="subtitle">Automatically sync your KoboToolbox forms to EspoCRM</p>
 
         <div id="alert" class="alert"></div>
@@ -433,6 +479,21 @@
                         <label for="espoPassword">Admin Password</label>
                         <input type="password" id="espoPassword" placeholder="••••••••">
                         <div class="help-text">Required for API access to create entities</div>
+                    </div>
+                    
+                    <!-- Webhook Setup - only for Kobo API source -->
+                    <div id="webhookSetupOption" style="display: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid #eee;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="setupWebhook" style="width: auto; margin: 0;">
+                            <span style="font-weight: 600;">Setup Auto-Sync from Kobo</span>
+                        </label>
+                        <div class="help-text" style="margin-left: 28px; margin-top: 4px;">Automatically create EspoCRM records when new forms are submitted in Kobo</div>
+                        
+                        <div id="webhookUrlInput" style="display: none; margin-top: 12px; margin-left: 28px;">
+                            <label for="webhookBaseUrl" style="font-size: 13px; font-weight: 500;">Your Server URL</label>
+                            <input type="url" id="webhookBaseUrl" placeholder="https://your-server.com" style="margin-top: 4px;">
+                            <div class="help-text">The public URL where this Flask app is running</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -493,6 +554,23 @@
                         <input type="password" id="koboToken" placeholder="Your KoboToolbox API token">
                         <div class="help-text">Get this from your Kobo account settings</div>
                     </div>
+                    
+                    <div class="form-group">
+                        <label class="toggle-label">
+                            <input type="checkbox" id="setupRestService" name="setupRestService">
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-text">Set up automatic REST service in Kobo</span>
+                        </label>
+                        <div class="help-text">Automatically push new submissions to EspoCRM in real-time</div>
+                    </div>
+                    
+                    <div id="restServiceConfig" style="display: none;">
+                        <div class="form-group">
+                            <label for="espoApiKey">EspoCRM API Key</label>
+                            <input type="password" id="espoApiKey" placeholder="Your EspoCRM API key">
+                            <div class="help-text">Required for Kobo Connect to authenticate with EspoCRM</div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -527,6 +605,11 @@
             document.getElementById('espoCredentialsSection').classList.toggle('active', deployMethod === 'direct');
             document.getElementById('xlsUploadSection').classList.toggle('active', dataSource === 'upload');
             document.getElementById('koboApiSection').classList.toggle('active', dataSource === 'kobo-api');
+            
+            // Show webhook setup only for Kobo API + Direct deploy
+            const showWebhook = deployMethod === 'direct' && dataSource === 'kobo-api';
+            document.getElementById('webhookSetupOption').style.display = showWebhook ? 'block' : 'none';
+            
             updateSubmitButton();
         }
 
@@ -539,6 +622,21 @@
                 customUrlGroup.style.display = 'none';
             }
             updateSubmitButton();
+        });
+
+        // Handle REST service toggle
+        document.getElementById('setupRestService').addEventListener('change', function() {
+            const restServiceConfig = document.getElementById('restServiceConfig');
+            if (this.checked) {
+                restServiceConfig.style.display = 'block';
+            } else {
+                restServiceConfig.style.display = 'none';
+            }
+        });
+        
+        // Handle webhook setup checkbox
+        document.getElementById('setupWebhook').addEventListener('change', function() {
+            document.getElementById('webhookUrlInput').style.display = this.checked ? 'block' : 'none';
         });
 
         function updateSubmitButton() {
@@ -639,6 +737,16 @@
                         formData.append('koboUrl', document.getElementById('customKoboUrl').value);
                     } else {
                         formData.append('koboUrl', koboServer);
+                    }
+                    
+                    // Include REST service setup if enabled
+                    const setupRestService = document.getElementById('setupRestService').checked;
+                    formData.append('setupRestService', setupRestService);
+                    if (setupRestService && deployMethod === 'direct') {
+                        const espoApiKey = document.getElementById('espoApiKey').value.trim();
+                        if (espoApiKey) {
+                            formData.append('espoApiKey', espoApiKey);
+                        }
                     }
                 }
                 
