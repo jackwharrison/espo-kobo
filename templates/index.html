@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="icon" href="{{ url_for('static', filename='favicon-16.png') }}" sizes="16x16" type="image/png">
+    <link rel="icon" href="{{ url_for('static', filename='favicon-32.png') }}?v=3" sizes="32x32" type="image/png">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='apple-touch-icon.png') }}" sizes="180x180">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meta Mapper</title>
+    <title>MetaMapper</title>
     <style>
         * {
             margin: 0;
@@ -184,6 +187,15 @@
             font-size: 11px;
             color: #999;
             margin-top: 4px;
+        }
+
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 36px;
         }
 
         .drop-zone {
@@ -458,6 +470,20 @@
                 <div id="koboApiSection" class="conditional-section">
                     <div class="section-header">🔗 KoboToolbox Connection</div>
                     <div class="form-group">
+                        <label for="koboServer">Kobo Server</label>
+                        <select id="koboServer" name="koboServer">
+                            <option value="https://kobo.ifrc.org">IFRC Kobo (kobo.ifrc.org)</option>
+                            <option value="https://kf.kobotoolbox.org">Public Kobo (kf.kobotoolbox.org)</option>
+                            <option value="custom">Custom Server...</option>
+                        </select>
+                        <div class="help-text">Select your KoboToolbox server</div>
+                    </div>
+                    <div class="form-group" id="customKoboUrlGroup" style="display: none;">
+                        <label for="customKoboUrl">Custom Kobo Server URL</label>
+                        <input type="text" id="customKoboUrl" placeholder="https://your-kobo-server.org">
+                        <div class="help-text">Enter the full URL of your custom Kobo server</div>
+                    </div>
+                    <div class="form-group">
                         <label for="koboAssetId">Asset ID</label>
                         <input type="text" id="koboAssetId" placeholder="aBC123xyz">
                         <div class="help-text">Found in your form's URL on KoboToolbox</div>
@@ -482,14 +508,14 @@
     </div>
 
     <footer>
-        <a href="mailto:jharrison@redcross.nl">✉ For assistance: jharrison@redcross.nl</a>
+        <a href="/cdn-cgi/l/email-protection#462c2e2734342f35292806342322253429353568282a">✉ For assistance: <span class="__cf_email__" data-cfemail="7b11131a0909120814153b091e1f1809140808551517">[email&#160;protected]</span></a>
         <a href="https://github.com/jackwharrison/espo-kobo" target="_blank" class="footer-github">
             <svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
             GitHub
         </a>
     </footer>
 
-    <script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
         let selectedFiles = [];
         let deployMethod = null;
         let dataSource = null;
@@ -503,6 +529,17 @@
             document.getElementById('koboApiSection').classList.toggle('active', dataSource === 'kobo-api');
             updateSubmitButton();
         }
+
+        // Handle Kobo server selection
+        document.getElementById('koboServer').addEventListener('change', function() {
+            const customUrlGroup = document.getElementById('customKoboUrlGroup');
+            if (this.value === 'custom') {
+                customUrlGroup.style.display = 'block';
+            } else {
+                customUrlGroup.style.display = 'none';
+            }
+            updateSubmitButton();
+        });
 
         function updateSubmitButton() {
             let canSubmit = false;
@@ -595,6 +632,14 @@
                 } else {
                     formData.append('koboAssetId', document.getElementById('koboAssetId').value);
                     formData.append('koboToken', document.getElementById('koboToken').value);
+                    
+                    // Get Kobo server URL
+                    const koboServer = document.getElementById('koboServer').value;
+                    if (koboServer === 'custom') {
+                        formData.append('koboUrl', document.getElementById('customKoboUrl').value);
+                    } else {
+                        formData.append('koboUrl', koboServer);
+                    }
                 }
                 
                 let endpoint, successMessage;
@@ -640,7 +685,7 @@
                 
             } catch (error) {
                 alertEl.className = 'alert error';
-                alertEl.textContent = error.message;
+                alertEl.textContent = error.message || 'An error occurred';
                 alertEl.style.display = 'block';
             } finally {
                 loading.classList.remove('active');

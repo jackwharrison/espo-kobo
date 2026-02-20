@@ -80,11 +80,15 @@ def deploy_direct():
             # Kobo API
             kobo_asset_id = data.get('koboAssetId', '').strip()
             kobo_token = data.get('koboToken', '').strip()
+            kobo_url = data.get('koboUrl', 'https://kobo.ifrc.org').strip()
             
             if not kobo_asset_id or not kobo_token:
                 return jsonify({'error': 'Missing Kobo Asset ID or API Token'}), 400
             
-            kobo_data = fetch_kobo_form(kobo_asset_id, kobo_token)
+            if not kobo_url:
+                kobo_url = 'https://kobo.ifrc.org'
+            
+            kobo_data = fetch_kobo_form(kobo_asset_id, kobo_token, kobo_url)
             entity_name = kobo_data.get('name', 'KoboForm')
             kobo_forms.append({
                 'data': kobo_data,
@@ -235,11 +239,15 @@ def generate_package():
         elif data_source == 'kobo-api':
             kobo_asset_id = data.get('koboAssetId', '').strip()
             kobo_token = data.get('koboToken', '').strip()
+            kobo_url = data.get('koboUrl', 'https://kobo.ifrc.org').strip()
             
             if not kobo_asset_id or not kobo_token:
                 return jsonify({'error': 'Missing Kobo Asset ID or API Token'}), 400
             
-            kobo_data = fetch_kobo_form(kobo_asset_id, kobo_token)
+            if not kobo_url:
+                kobo_url = 'https://kobo.ifrc.org'
+            
+            kobo_data = fetch_kobo_form(kobo_asset_id, kobo_token, kobo_url)
             entity_name = kobo_data.get('name', 'KoboForm')
             kobo_forms.append({
                 'data': kobo_data,

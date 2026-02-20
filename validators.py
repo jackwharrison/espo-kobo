@@ -181,6 +181,16 @@ def validate_package_safety(kobo_data, entity_name):
         q_type = question.get('type', '')
         q_name = question.get('name', '')
 
+        # Skip fields with no name
+        if not q_name or (isinstance(q_name, str) and not q_name.strip()):
+            print(f"  Warning: Skipping field with empty name (type: {q_type}, label: {question.get('label', 'no label')})")
+            unsupported_fields.append({
+                'name': '<empty>',
+                'type': q_type,
+                'reason': 'Field has no name'
+            })
+            continue
+
         if q_type in UNSUPPORTED_FIELD_TYPES:
             continue  # structural elements, handled separately for layout
 
