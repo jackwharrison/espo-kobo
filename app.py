@@ -19,7 +19,6 @@ app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 64 * 1024 * 1024
 app.config['UPLOAD_FOLDER'] = tempfile.gettempdir()
 
-# Register webhook blueprint
 
 
 ALLOWED_EXTENSIONS = {'xls', 'xlsx'}
@@ -172,38 +171,52 @@ def deploy_direct():
                 # Setup Kobo Connect REST service if requested (only for Kobo API source)
                 if data_source == 'kobo-api' and data.get('setupRestService') == 'true':
                     try:
+                        print(f"\n[7] Setting up API user and Kobo Connect REST service...")
+                        
+                        # Step 1: Create API user and get key
+                        from espo_api_user_setup import setup_api_user_for_entity
+                        
+                        api_user_result = setup_api_user_for_entity(
+                            espo_url,
+                            espo_username,
+                            espo_password,
+                            entity_name  # Without C prefix
+                        )
+                        
+                        espo_api_key = api_user_result['api_key']
+                        
+                        # Step 2: Generate field mapping
                         from kobo_connect_setup import setup_kobo_connect_rest_service, get_field_mapping_from_kobo_data
                         
-                        espo_api_key = data.get('espoApiKey', '').strip()
-                        if not espo_api_key:
-                            print("\n⚠️  Warning: No EspoCRM API key provided, skipping REST service setup")
-                        else:
-                            print(f"\n[7] Setting up Kobo Connect REST service...")
-                            
-                            # Generate field mapping
-                            field_mapping = get_field_mapping_from_kobo_data(
-                                form_info['data'],
-                                entity_name
-                            )
-                            
-                            # Setup REST service
-                            rest_service = setup_kobo_connect_rest_service(
-                                kobo_url=kobo_url,
-                                api_token=kobo_token,
-                                asset_id=kobo_asset_id,
-                                entity_name=f"C{entity_name}",  # Add C prefix for EspoCRM
-                                field_mapping=field_mapping,
-                                espo_url=espo_url,
-                                espo_api_key=espo_api_key
-                            )
-                            
-                            results[-1]['rest_service_id'] = rest_service.get('uid')
-                            results[-1]['rest_service_name'] = rest_service.get('name')
-                            
-                            print(f"✓ REST service configured successfully")
+                        field_mapping = get_field_mapping_from_kobo_data(
+                            form_info['data'],
+                            entity_name
+                        )
+                        
+                        # Step 3: Setup REST service in Kobo
+                        rest_service = setup_kobo_connect_rest_service(
+                            kobo_url=kobo_url,
+                            api_token=kobo_token,
+                            asset_id=kobo_asset_id,
+                            entity_name=entity_name,  # No C prefix
+                            field_mapping=field_mapping,
+                            espo_url=espo_url,
+                            espo_api_key=espo_api_key
+                        )
+                        
+                        results[-1]['api_user'] = {
+                            'username': api_user_result['username'],
+                            'role_name': api_user_result['role_name']
+                        }
+                        results[-1]['rest_service_id'] = rest_service.get('uid')
+                        results[-1]['rest_service_name'] = rest_service.get('name')
+                        
+                        print(f"✓ API user and REST service configured successfully")
                     
                     except Exception as e:
                         print(f"\n✗ Warning: Failed to setup REST service: {str(e)}")
+                        import traceback
+                        traceback.print_exc()
                         results[-1]['rest_service_error'] = str(e)
                 
             except (ValidationError, EspoAPIError) as e:

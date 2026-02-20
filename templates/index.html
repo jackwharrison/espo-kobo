@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kobo to EspoCRM Bridge</title>
+    <title>MetaMapper</title>
     <style>
         * {
             margin: 0;
@@ -37,8 +38,8 @@
         }
 
         .logo-wrapper img {
-            max-height: 60px;
-            max-width: 220px;
+            max-height: 300px;
+            max-width: 600px;
             object-fit: contain;
         }
 
@@ -481,20 +482,6 @@
                         <div class="help-text">Required for API access to create entities</div>
                     </div>
                     
-                    <!-- Webhook Setup - only for Kobo API source -->
-                    <div id="webhookSetupOption" style="display: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid #eee;">
-                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                            <input type="checkbox" id="setupWebhook" style="width: auto; margin: 0;">
-                            <span style="font-weight: 600;">Setup Auto-Sync from Kobo</span>
-                        </label>
-                        <div class="help-text" style="margin-left: 28px; margin-top: 4px;">Automatically create EspoCRM records when new forms are submitted in Kobo</div>
-                        
-                        <div id="webhookUrlInput" style="display: none; margin-top: 12px; margin-left: 28px;">
-                            <label for="webhookBaseUrl" style="font-size: 13px; font-weight: 500;">Your Server URL</label>
-                            <input type="url" id="webhookBaseUrl" placeholder="https://your-server.com" style="margin-top: 4px;">
-                            <div class="help-text">The public URL where this Flask app is running</div>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -555,21 +542,13 @@
                         <div class="help-text">Get this from your Kobo account settings</div>
                     </div>
                     
-                    <div class="form-group">
+                    <div class="form-group" id="restServiceToggle" style="display: none;">
                         <label class="toggle-label">
                             <input type="checkbox" id="setupRestService" name="setupRestService">
                             <span class="toggle-slider"></span>
-                            <span class="toggle-text">Set up automatic REST service in Kobo</span>
+                            <span class="toggle-text">Set up automatic data sync to EspoCRM (Create Rest Service)</span>
                         </label>
-                        <div class="help-text">Automatically push new submissions to EspoCRM in real-time</div>
-                    </div>
-                    
-                    <div id="restServiceConfig" style="display: none;">
-                        <div class="form-group">
-                            <label for="espoApiKey">EspoCRM API Key</label>
-                            <input type="password" id="espoApiKey" placeholder="Your EspoCRM API key">
-                            <div class="help-text">Required for Kobo Connect to authenticate with EspoCRM</div>
-                        </div>
+                        <div class="help-text">Automatically push new Kobo submissions to EspoCRM in real-time</div>
                     </div>
                 </div>
             </div>
@@ -585,8 +564,8 @@
         </form>
     </div>
 
-    <footer>
-        <a href="/cdn-cgi/l/email-protection#462c2e2734342f35292806342322253429353568282a">✉ For assistance: <span class="__cf_email__" data-cfemail="7b11131a0909120814153b091e1f1809140808551517">[email&#160;protected]</span></a>
+   <footer>
+        <a href="mailto:jharrison@redcross.nl">✉ For assistance: jharrison@redcross.nl</a>
         <a href="https://github.com/jackwharrison/espo-kobo" target="_blank" class="footer-github">
             <svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
             GitHub
@@ -606,9 +585,14 @@
             document.getElementById('xlsUploadSection').classList.toggle('active', dataSource === 'upload');
             document.getElementById('koboApiSection').classList.toggle('active', dataSource === 'kobo-api');
             
-            // Show webhook setup only for Kobo API + Direct deploy
-            const showWebhook = deployMethod === 'direct' && dataSource === 'kobo-api';
-            document.getElementById('webhookSetupOption').style.display = showWebhook ? 'block' : 'none';
+            // Show REST service toggle only when: Direct deploy + Kobo API
+            const showRestService = deployMethod === 'direct' && dataSource === 'kobo-api';
+            document.getElementById('restServiceToggle').style.display = showRestService ? 'block' : 'none';
+            
+            // Uncheck the toggle if hiding it
+            if (!showRestService) {
+                document.getElementById('setupRestService').checked = false;
+            }
             
             updateSubmitButton();
         }
@@ -623,22 +607,7 @@
             }
             updateSubmitButton();
         });
-
-        // Handle REST service toggle
-        document.getElementById('setupRestService').addEventListener('change', function() {
-            const restServiceConfig = document.getElementById('restServiceConfig');
-            if (this.checked) {
-                restServiceConfig.style.display = 'block';
-            } else {
-                restServiceConfig.style.display = 'none';
-            }
-        });
         
-        // Handle webhook setup checkbox
-        document.getElementById('setupWebhook').addEventListener('change', function() {
-            document.getElementById('webhookUrlInput').style.display = this.checked ? 'block' : 'none';
-        });
-
         function updateSubmitButton() {
             let canSubmit = false;
             let buttonText = 'Generate Entities';
@@ -742,12 +711,6 @@
                     // Include REST service setup if enabled
                     const setupRestService = document.getElementById('setupRestService').checked;
                     formData.append('setupRestService', setupRestService);
-                    if (setupRestService && deployMethod === 'direct') {
-                        const espoApiKey = document.getElementById('espoApiKey').value.trim();
-                        if (espoApiKey) {
-                            formData.append('espoApiKey', espoApiKey);
-                        }
-                    }
                 }
                 
                 let endpoint, successMessage;

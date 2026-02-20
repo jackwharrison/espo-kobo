@@ -34,7 +34,7 @@ def setup_kobo_connect_rest_service(kobo_url, api_token, asset_id, entity_name, 
     custom_headers = {}
     for kobo_field, espo_field in field_mapping.items():
         header_key = kobo_field.replace(' ', '_')  # Replace spaces with underscores
-        header_value = f"{entity_name}.{espo_field}"
+        header_value = f"{entity_name}.{espo_field}"  # No C prefix needed
         custom_headers[header_key] = header_value
     
     # Add required Kobo Connect headers
