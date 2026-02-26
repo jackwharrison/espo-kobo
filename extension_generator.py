@@ -281,12 +281,15 @@ def generate_bottom_panels_layout():
 # i18n
 # ---------------------------------------------------------------------------
 
-def generate_i18n(entity_name, survey_questions):
+def generate_i18n(entity_name, survey_questions, use_kobo_id_for_name=False):
     """
     Generate en_US i18n so field names display as readable labels in the UI.
     Uses Kobo question labels directly.
+    
+    Args:
+        use_kobo_id_for_name: If True, label 'name' field as 'Kobo ID' instead of 'Name'
     """
-    fields = {'name': 'Name'}
+    fields = {'name': 'Kobo ID' if use_kobo_id_for_name else 'Name'}
     options = {}
 
     for question in survey_questions:
@@ -326,11 +329,14 @@ def generate_i18n(entity_name, survey_questions):
 # Main entry point
 # ---------------------------------------------------------------------------
 
-def build_entity_files(kobo_data, entity_name):
+def build_entity_files(kobo_data, entity_name, use_kobo_id_for_name=False):
     """
     Returns a dict of { zip_internal_path: content_string }
     for all files needed for one entity.
     app.py writes these directly into the single output zip.
+    
+    Args:
+        use_kobo_id_for_name: If True, label 'name' field as 'Kobo ID' (for REST service without name field)
     """
     survey_questions = kobo_data.get('content', {}).get('survey', [])
     if not survey_questions:
@@ -400,7 +406,7 @@ class {entity_name} extends \\Espo\\Core\\Templates\\Controllers\\Base
 {{}}
 """
 
-    i18n_en_us = generate_i18n(entity_name, survey_questions)
+    i18n_en_us = generate_i18n(entity_name, survey_questions, use_kobo_id_for_name)
 
     layout_base = f"{BASE_PATH}/layouts/{entity_name}"
 

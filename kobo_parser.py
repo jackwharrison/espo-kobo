@@ -50,7 +50,33 @@ def parse_xlsform(filepath):
             if not q_name or q_name == 'nan':
                 continue
             
+            # Handle multi-language labels (e.g., 'label::English (en)')
+            # First try standard 'label' column
             q_label = row.get('label', q_name)
+            
+            # If label is NaN or empty, try language-specific columns
+            if pd.isna(q_label) or str(q_label).strip() == '' or str(q_label) == 'nan':
+                # Get all label columns
+                label_columns = [col for col in survey_df.columns if col.startswith('label::')]
+                
+                # Prioritize English
+                english_cols = [col for col in label_columns if 'english' in col.lower() or col.lower().endswith('(en)')]
+                if english_cols:
+                    potential_label = row.get(english_cols[0])
+                    if not pd.isna(potential_label) and str(potential_label).strip() and str(potential_label) != 'nan':
+                        q_label = potential_label
+                
+                # If no English label, use first available language
+                if (pd.isna(q_label) or str(q_label).strip() == '' or str(q_label) == 'nan') and label_columns:
+                    for label_col in label_columns:
+                        potential_label = row.get(label_col)
+                        if not pd.isna(potential_label) and str(potential_label).strip() and str(potential_label) != 'nan':
+                            q_label = potential_label
+                            break
+                
+                # If still no label found, use name
+                if pd.isna(q_label) or str(q_label).strip() == '' or str(q_label) == 'nan':
+                    q_label = q_name
             
             # Handle NaN labels
             if pd.isna(q_label):
@@ -88,6 +114,30 @@ def parse_xlsform(filepath):
                         for _, choice_row in choices_rows.iterrows():
                             choice_name = str(choice_row.get('name', '')).strip()
                             choice_label = choice_row.get('label', choice_name)
+                            
+                            # Handle multi-language labels for choices
+                            if pd.isna(choice_label) or str(choice_label).strip() == '' or str(choice_label) == 'nan':
+                                # Get all label columns
+                                label_columns = [col for col in choices_df.columns if col.startswith('label::')]
+                                
+                                # Prioritize English
+                                english_cols = [col for col in label_columns if 'english' in col.lower() or col.lower().endswith('(en)')]
+                                if english_cols:
+                                    potential_label = choice_row.get(english_cols[0])
+                                    if not pd.isna(potential_label) and str(potential_label).strip() and str(potential_label) != 'nan':
+                                        choice_label = potential_label
+                                
+                                # If no English label, use first available language
+                                if (pd.isna(choice_label) or str(choice_label).strip() == '' or str(choice_label) == 'nan') and label_columns:
+                                    for label_col in label_columns:
+                                        potential_label = choice_row.get(label_col)
+                                        if not pd.isna(potential_label) and str(potential_label).strip() and str(potential_label) != 'nan':
+                                            choice_label = potential_label
+                                            break
+                                
+                                # If still no label, use name
+                                if pd.isna(choice_label) or str(choice_label).strip() == '' or str(choice_label) == 'nan':
+                                    choice_label = choice_name
                             
                             # Handle NaN labels
                             if pd.isna(choice_label):

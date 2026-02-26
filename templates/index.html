@@ -47,12 +47,14 @@
             color: #333;
             margin-bottom: 6px;
             font-size: 26px;
+            text-align: center;
         }
 
         .subtitle {
             color: #888;
             margin-bottom: 32px;
             font-size: 14px;
+            text-align: center;
         }
 
         .question-section {
@@ -103,28 +105,25 @@
 
         .option-card.selected {
             border-color: #667eea;
-            background: #f0eeff;
+            background: linear-gradient(135deg, #f8f7ff 0%, #f0edff 100%);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
         }
 
         .option-icon {
-            font-size: 28px;
+            font-size: 32px;
             margin-bottom: 8px;
         }
 
         .option-title {
             font-weight: 600;
-            font-size: 14px;
             color: #333;
             margin-bottom: 4px;
-        }
-
-        .option-card.selected .option-title {
-            color: #667eea;
+            font-size: 14px;
         }
 
         .option-desc {
             font-size: 12px;
-            color: #999;
+            color: #666;
             line-height: 1.4;
         }
 
@@ -132,9 +131,8 @@
             display: none;
             margin-top: 20px;
             padding: 20px;
-            background: #fafafa;
-            border-radius: 12px;
-            border: 1px solid #e8e8e8;
+            background: #f8f9fa;
+            border-radius: 10px;
         }
 
         .conditional-section.active {
@@ -142,10 +140,10 @@
         }
 
         .section-header {
-            font-size: 13px;
             font-weight: 600;
-            color: #555;
-            margin-bottom: 14px;
+            margin-bottom: 16px;
+            color: #333;
+            font-size: 14px;
         }
 
         .form-group {
@@ -156,34 +154,24 @@
             margin-bottom: 0;
         }
 
-        label {
+        .form-group label {
             display: block;
-            font-size: 13px;
-            font-weight: 600;
-            color: #444;
             margin-bottom: 6px;
+            font-weight: 500;
+            font-size: 13px;
+            color: #555;
         }
 
-        input[type="text"],
-        input[type="password"],
-        input[type="url"] {
+        input,
+        select {
             width: 100%;
             padding: 10px 12px;
             border: 2px solid #e0e0e0;
             border-radius: 8px;
             font-size: 14px;
+            font-family: inherit;
             transition: border-color 0.2s;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .help-text {
-            font-size: 11px;
-            color: #999;
-            margin-top: 4px;
+            background: white;
         }
 
         select {
@@ -195,54 +183,84 @@
             padding-right: 36px;
         }
 
-        .toggle-label {
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .help-text {
+            font-size: 11px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .toggle-container {
             display: flex;
-            align-items: center;
-            cursor: pointer;
-            user-select: none;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 12px 0;
         }
 
-        .toggle-label input[type="checkbox"] {
-            position: absolute;
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .toggle-slider {
+        .toggle-switch {
             position: relative;
-            width: 44px;
-            height: 24px;
-            background: #ccc;
-            border-radius: 24px;
-            transition: background 0.3s;
-            margin-right: 12px;
+            width: 50px;
+            height: 26px;
             flex-shrink: 0;
         }
 
-        .toggle-slider::before {
-            content: '';
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
             position: absolute;
-            width: 18px;
+        }
+
+        .toggle-switch-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #fff;
+            border: 2px solid #667eea;
+            border-radius: 26px;
+            transition: .3s;
+        }
+
+        .toggle-switch-slider:before {
+            position: absolute;
+            content: "";
             height: 18px;
+            width: 18px;
+            left: 2px;
+            bottom: 2px;
+            background-color: #667eea;
             border-radius: 50%;
-            background: white;
-            top: 3px;
-            left: 3px;
-            transition: transform 0.3s;
+            transition: .3s;
         }
 
-        .toggle-label input:checked + .toggle-slider {
-            background: #667eea;
+        .toggle-switch input:checked + .toggle-switch-slider {
+            background-color: #667eea;
         }
 
-        .toggle-label input:checked + .toggle-slider::before {
-            transform: translateX(20px);
+        .toggle-switch input:checked + .toggle-switch-slider:before {
+            background-color: white;
+            transform: translateX(24px);
         }
 
-        .toggle-text {
-            font-weight: 500;
+        .toggle-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .toggle-title {
+            font-weight: 600;
             color: #333;
+            font-size: 14px;
+            margin-bottom: 4px;
+            line-height: 1.4;
         }
 
         .drop-zone {
@@ -278,19 +296,18 @@
         }
 
         .drop-zone-text {
-            color: #555;
-            font-size: 14px;
-            font-weight: 600;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 4px;
         }
 
         .drop-zone-subtext {
-            color: #aaa;
-            font-size: 11px;
-            margin-top: 4px;
+            font-size: 12px;
+            color: #999;
         }
 
         .file-list {
-            margin-top: 16px;
+            margin-top: 12px;
             display: none;
         }
 
@@ -302,35 +319,27 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 10px 12px;
+            padding: 8px 12px;
             background: white;
-            border-radius: 8px;
+            border-radius: 6px;
             margin-bottom: 6px;
-            font-size: 13px;
-            border: 1px solid #e0e0e0;
         }
 
         .file-item-name {
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            font-size: 13px;
             color: #333;
-            font-weight: 500;
         }
 
         .file-item-remove {
-            background: none;
+            background: #ff4444;
+            color: white;
             border: none;
-            color: #aaa;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
             cursor: pointer;
-            font-size: 16px;
-            padding: 4px 8px;
-            border-radius: 4px;
-        }
-
-        .file-item-remove:hover {
-            background: #f5f5f5;
-            color: #666;
+            font-size: 12px;
+            line-height: 1;
         }
 
         .alert {
@@ -375,6 +384,31 @@
         .button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border: 1px solid #2196f3;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 20px;
+            font-size: 13px;
+            color: #0d47a1;
+        }
+
+        .info-box strong {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .info-box ol {
+            margin-left: 20px;
+            margin-top: 8px;
+        }
+
+        .info-box li {
+            margin-bottom: 4px;
         }
 
         footer {
@@ -442,51 +476,15 @@
         <div class="logo-wrapper">
             <img src="/static/logo.png" alt="Logo">
         </div>
-        <h1>Kobo → EspoCRM</h1>
-        <p class="subtitle">Automatically sync your KoboToolbox forms to EspoCRM</p>
+        <h1>🔄 Kobo → EspoCRM</h1>
+        <p class="subtitle">Generate EspoCRM extensions from your KoboToolbox forms</p>
 
         <div id="alert" class="alert"></div>
 
         <form id="mainForm">
+            <!-- Data Source Selection -->
             <div class="question-section">
-                <label class="question-label">How would you like to deploy the entities?</label>
-                <div class="option-cards">
-                    <div class="option-card" data-option="deploy-method" data-value="direct">
-                        <input type="radio" name="deployMethod" value="direct">
-                        <div class="option-icon">⚡</div>
-                        <div class="option-title">Create Directly</div>
-                        <div class="option-desc">Automatically create entities in your EspoCRM instance</div>
-                    </div>
-                    <div class="option-card" data-option="deploy-method" data-value="package">
-                        <input type="radio" name="deployMethod" value="package">
-                        <div class="option-icon">📦</div>
-                        <div class="option-title">Download Package</div>
-                        <div class="option-desc">Generate extension package to install manually</div>
-                    </div>
-                </div>
-
-                <div id="espoCredentialsSection" class="conditional-section">
-                    <div class="section-header">🔐 EspoCRM Instance Details</div>
-                    <div class="form-group">
-                        <label for="espoUrl">EspoCRM URL</label>
-                        <input type="url" id="espoUrl" placeholder="https://your-espo-instance.com">
-                        <div class="help-text">The full URL of your EspoCRM installation (Do not include back slash '/' at the end.)</div>
-                    </div>
-                    <div class="form-group">
-                        <label for="espoUsername">Admin Username</label>
-                        <input type="text" id="espoUsername" placeholder="admin">
-                    </div>
-                    <div class="form-group">
-                        <label for="espoPassword">Admin Password</label>
-                        <input type="password" id="espoPassword" placeholder="••••••••">
-                        <div class="help-text">Required for API access to create entities</div>
-                    </div>
-                    
-                </div>
-            </div>
-
-            <div class="question-section">
-                <label class="question-label">How would you like to provide the form data?</label>
+                <label class="question-label">Select your data source</label>
                 <div class="option-cards">
                     <div class="option-card" data-option="data-source" data-value="upload">
                         <input type="radio" name="dataSource" value="upload">
@@ -502,8 +500,12 @@
                     </div>
                 </div>
 
+                <!-- XLS Upload Section -->
                 <div id="xlsUploadSection" class="conditional-section">
                     <div class="section-header">📄 Upload Form Files</div>
+                    <div style="background: #e7f3ff; border: 1px solid #2196f3; border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 13px; color: #0d47a1;">
+                        <strong>💡 Tip:</strong> The entity name in EspoCRM will be based on your file name. For example, <code>Customer_Registration.xlsx</code> becomes <code>CustomerRegistration</code>. Rename your file before uploading for better clarity.
+                    </div>
                     <div class="drop-zone" id="dropZone">
                         <input type="file" id="xlsforms" name="xlsforms" accept=".xls,.xlsx" multiple>
                         <div class="drop-zone-icon">📂</div>
@@ -515,6 +517,7 @@
                     </div>
                 </div>
 
+                <!-- Kobo API Section -->
                 <div id="koboApiSection" class="conditional-section">
                     <div class="section-header">🔗 KoboToolbox Connection</div>
                     <div class="form-group">
@@ -542,58 +545,108 @@
                         <div class="help-text">Get this from your Kobo account settings</div>
                     </div>
                     
-                    <div class="form-group" id="restServiceToggle" style="display: none;">
-                        <label class="toggle-label">
-                            <input type="checkbox" id="setupRestService" name="setupRestService">
-                            <span class="toggle-slider"></span>
-                            <span class="toggle-text">Set up automatic data sync to EspoCRM (Create Rest Service)</span>
-                        </label>
-                        <div class="help-text">Automatically push new Kobo submissions to EspoCRM in real-time</div>
+                    <div class="form-group">
+                        <div class="toggle-container">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="setupRestService" name="setupRestService">
+                                <span class="toggle-switch-slider"></span>
+                            </label>
+                            <div class="toggle-content">
+                                <div class="toggle-title">Set up automatic data sync to EspoCRM</div>
+                                <div class="help-text" style="margin-top: 0;">Creates a REST service in Kobo (requires additional setup in EspoCRM)</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <button type="submit" class="button" id="submitBtn" disabled>
-                Generate Entities
+                Select a data source to continue
             </button>
+
+            <div class="info-box">
+                <strong>📦 How to install the extension:</strong>
+                <ol>
+                    <li>Download the generated extension package (.zip file)</li>
+                    <li>Log in to your EspoCRM instance</li>
+                    <li>Go to <strong>Administration → Extensions</strong></li>
+                    <li>Click <strong>Install</strong> and upload the .zip file</li>
+                    <li>Wait for installation to complete - EspoCRM will automatically rebuild</li>
+                    <li>Your new entity is now ready to use!</li>
+                </ol>
+            </div>
+
+            <div class="info-box" id="restServiceInstructions" style="display: none; background: #fff3cd; border-color: #ffc107; color: #856404; margin-top: 16px;">
+                <strong>🔗 Finalize Kobo Connect REST Service:</strong>
+                <p style="margin-bottom: 12px;">The REST service has been created in Kobo with placeholder values. Complete these steps to activate automatic data sync:</p>
+                <ol>
+                    <li><strong>Create API Role in EspoCRM:</strong>
+                        <ul style="margin-left: 20px; margin-top: 4px;">
+                            <li>Go to <strong>Administration → Roles → Create Role</strong></li>
+                            <li>Name it something like "<span id="entityNameRole">YourEntity</span>API"</li>
+                            <li>Under "Scope Level", find your entity and set: <strong>Create = Yes</strong>, all others = No</li>
+                            <li>Save the role</li>
+                        </ul>
+                    </li>
+                    <li style="margin-top: 8px;"><strong>Create API User:</strong>
+                        <ul style="margin-left: 20px; margin-top: 4px;">
+                            <li>Go to <strong>Administration → Users → Create User</strong></li>
+                            <li>Type: <strong>API</strong></li>
+                            <li>Username: "<span id="entityNameUser">yourentity</span>api"</li>
+                            <li>Assign the role you just created</li>
+                            <li>Save and copy the <strong>API Key</strong> that appears</li>
+                        </ul>
+                    </li>
+                    <li style="margin-top: 8px;"><strong>Update REST Service in Kobo:</strong>
+                        <ul style="margin-left: 20px; margin-top: 4px;">
+                            <li>Log in to your Kobo account</li>
+                            <li>Open your form → Settings → REST Services</li>
+                            <li>Find the "Kobo Connect → EspoCRM" service</li>
+                            <li>Click <strong>Edit</strong></li>
+                            <li>Update custom headers:
+                                <ul style="margin-left: 20px; margin-top: 4px;">
+                                    <li><code>targetkey</code>: Replace <code>YOUR-API-KEY</code> with the API key from step 2</li>
+                                    <li><code>targeturl</code>: Replace <code>YOUR-ESPO-INSTANCE</code> with your EspoCRM URL (e.g., <code>https://your-instance.com/</code>) <strong>Note: Include the trailing slash!</strong></li>
+                                </ul>
+                            </li>
+                            <li>Save the REST service</li>
+                        </ul>
+                    </li>
+                    <li style="margin-top: 8px;"><strong>Test the Connection:</strong>
+                        <ul style="margin-left: 20px; margin-top: 4px;">
+                            <li>In Kobo, submit a test form entry</li>
+                            <li>Check your EspoCRM entity - a new record should appear automatically!</li>
+                            <li>If it doesn't work, check the REST service logs in Kobo for error messages</li>
+                        </ul>
+                    </li>
+                </ol>
+            </div>
 
             <div class="loading" id="loading">
                 <div class="spinner"></div>
-                <p>Processing...</p>
+                <p>Generating extension package...</p>
             </div>
         </form>
     </div>
 
-   <footer>
-        <a href="mailto:jharrison@redcross.nl">✉ For assistance: jharrison@redcross.nl</a>
+    <footer>
+        <a href="/cdn-cgi/l/email-protection#3c56545d4e4e554f53527c4e59585f4e534f4f125250">✉ For assistance: <span class="__cf_email__" data-cfemail="7f15171e0d0d160c10113f0d1a1b1c0d100c0c511113">[email&#160;protected]</span></a>
         <a href="https://github.com/jackwharrison/espo-kobo" target="_blank" class="footer-github">
             <svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
             GitHub
         </a>
     </footer>
 
-    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
         let selectedFiles = [];
-        let deployMethod = null;
         let dataSource = null;
         const alertEl = document.getElementById('alert');
         const submitBtn = document.getElementById('submitBtn');
         const loading = document.getElementById('loading');
 
         function updateConditionalSections() {
-            document.getElementById('espoCredentialsSection').classList.toggle('active', deployMethod === 'direct');
             document.getElementById('xlsUploadSection').classList.toggle('active', dataSource === 'upload');
             document.getElementById('koboApiSection').classList.toggle('active', dataSource === 'kobo-api');
-            
-            // Show REST service toggle only when: Direct deploy + Kobo API
-            const showRestService = deployMethod === 'direct' && dataSource === 'kobo-api';
-            document.getElementById('restServiceToggle').style.display = showRestService ? 'block' : 'none';
-            
-            // Uncheck the toggle if hiding it
-            if (!showRestService) {
-                document.getElementById('setupRestService').checked = false;
-            }
-            
             updateSubmitButton();
         }
 
@@ -607,23 +660,25 @@
             }
             updateSubmitButton();
         });
+
+        // Handle REST service toggle
+        document.getElementById('setupRestService').addEventListener('change', function() {
+            const instructions = document.getElementById('restServiceInstructions');
+            instructions.style.display = this.checked ? 'block' : 'none';
+        });
         
         function updateSubmitButton() {
             let canSubmit = false;
-            let buttonText = 'Generate Entities';
+            let buttonText = 'Select a data source to continue';
 
-            if (deployMethod && dataSource) {
-                if (dataSource === 'upload') {
-                    canSubmit = selectedFiles.length > 0;
-                    buttonText = deployMethod === 'direct' 
-                        ? `Create ${selectedFiles.length} Entit${selectedFiles.length === 1 ? 'y' : 'ies'} in EspoCRM`
-                        : 'Download Extension Package';
-                } else {
-                    const assetId = document.getElementById('koboAssetId').value.trim();
-                    const token = document.getElementById('koboToken').value.trim();
-                    canSubmit = assetId && token;
-                    buttonText = deployMethod === 'direct' ? 'Create Entity in EspoCRM' : 'Download Extension Package';
-                }
+            if (dataSource === 'upload') {
+                canSubmit = selectedFiles.length > 0;
+                buttonText = `Generate Extension Package (${selectedFiles.length} form${selectedFiles.length === 1 ? '' : 's'})`;
+            } else if (dataSource === 'kobo-api') {
+                const assetId = document.getElementById('koboAssetId').value.trim();
+                const token = document.getElementById('koboToken').value.trim();
+                canSubmit = assetId && token;
+                buttonText = 'Generate Extension Package';
             }
 
             submitBtn.disabled = !canSubmit;
@@ -632,13 +687,11 @@
 
         document.querySelectorAll('.option-card').forEach(card => {
             card.addEventListener('click', () => {
-                const option = card.dataset.option;
                 const value = card.dataset.value;
                 card.querySelector('input').checked = true;
-                document.querySelectorAll(`.option-card[data-option="${option}"]`).forEach(c => c.classList.remove('selected'));
+                document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
                 card.classList.add('selected');
-                if (option === 'deploy-method') deployMethod = value;
-                else dataSource = value;
+                dataSource = value;
                 updateConditionalSections();
             });
         });
@@ -648,12 +701,7 @@
         const fileItems = document.getElementById('fileItems');
 
         function handleFiles(files) {
-            Array.from(files).forEach(file => {
-                const ext = file.name.split('.').pop().toLowerCase();
-                if (['xls', 'xlsx'].includes(ext) && !selectedFiles.find(f => f.name === file.name)) {
-                    selectedFiles.push(file);
-                }
-            });
+            selectedFiles = Array.from(files);
             updateFileList();
         }
 
@@ -707,39 +755,34 @@
                     } else {
                         formData.append('koboUrl', koboServer);
                     }
-                    
+
                     // Include REST service setup if enabled
                     const setupRestService = document.getElementById('setupRestService').checked;
                     formData.append('setupRestService', setupRestService);
                 }
                 
-                let endpoint, successMessage;
+                const response = await fetch('/generate-package', { method: 'POST', body: formData });
                 
-                if (deployMethod === 'direct') {
-                    endpoint = '/deploy-direct';
-                    formData.append('espoUrl', document.getElementById('espoUrl').value);
-                    formData.append('espoUsername', document.getElementById('espoUsername').value);
-                    formData.append('espoPassword', document.getElementById('espoPassword').value);
-                    
-                    const response = await fetch(endpoint, { method: 'POST', body: formData });
-                    if (!response.ok) throw new Error((await response.json()).error || 'Failed to deploy');
-                    
-                    const result = await response.json();
-                    successMessage = `✅ Successfully created ${result.results.length} entit${result.results.length === 1 ? 'y' : 'ies'} in EspoCRM!`;
-                } else {
-                    endpoint = '/generate-package';
-                    const response = await fetch(endpoint, { method: 'POST', body: formData });
-                    if (!response.ok) throw new Error((await response.json()).error || 'Failed to generate');
-                    
-                    const blob = await response.blob();
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'espo_extension.zip';
-                    a.click();
-                    URL.revokeObjectURL(url);
-                    
-                    successMessage = '✅ Extension package downloaded! Install via EspoCRM Administration → Extensions.';
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || errorData.error || 'Failed to generate package');
+                }
+                
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'espo_extension.zip';
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                let successMessage = '✅ Extension package downloaded!';
+                let hasWarnings = false;
+                
+                // Check server logs or response headers for partial failures
+                // For now, show generic success message
+                if (dataSource === 'upload' && selectedFiles.length > 1) {
+                    successMessage = `✅ Extension package generated for ${selectedFiles.length} file(s). Check console for any warnings.`;
                 }
                 
                 alertEl.className = 'alert success';
@@ -749,7 +792,6 @@
                 selectedFiles = [];
                 updateFileList();
                 document.getElementById('mainForm').reset();
-                deployMethod = null;
                 dataSource = null;
                 document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
                 updateConditionalSections();

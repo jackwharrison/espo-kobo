@@ -75,18 +75,35 @@ def sanitize_entity_name(name):
 def sanitize_field_name(name):
     """
     Convert name to valid EspoCRM field name (camelCase, alphanumeric only)
+    Handles leading underscores and preserves as much of the original name as possible.
     """
-    cleaned = re.sub(r'[^a-zA-Z0-9\s_]', '', name)
+    # Remove leading/trailing underscores and whitespace
+    name = name.strip('_').strip()
+    
+    # Replace special characters with spaces (except underscores which we'll use as word separators)
+    # Keep more characters to avoid truncation
+    cleaned = re.sub(r'[^\w\s]', ' ', name)  # \w includes letters, digits, underscores
+    
+    # Split on whitespace and underscores
     parts = re.split(r'[\s_]+', cleaned)
-
-    if not parts or not parts[0]:
+    
+    # Filter out empty parts
+    parts = [p for p in parts if p]
+    
+    if not parts:
         raise ValidationError(f"Field name '{name}' is invalid after sanitization")
-
+    
+    # Create camelCase: first word lowercase, rest capitalized
     camel_case = parts[0].lower() + ''.join(word.capitalize() for word in parts[1:])
-
+    
+    # Ensure it starts with a letter (not a digit)
     if not camel_case[0].isalpha():
         camel_case = 'field' + camel_case.capitalize()
-
+    
+    # Ensure it's not too long (EspoCRM has field name limits)
+    if len(camel_case) > 100:
+        camel_case = camel_case[:100]
+    
     return camel_case
 
 
@@ -124,9 +141,13 @@ def validate_field_count(field_count):
 
 
 def check_malicious_input(data):
+    """
+    Check for potentially malicious patterns.
+    Note: ${} is valid Kobo calculation syntax and is allowed.
+    """
     dangerous_patterns = [
         r'<script', r'javascript:', r'onerror=', r'onclick=',
-        r'\$\{', r'`', r'eval\(', r'exec\(',
+        r'`', r'eval\(', r'exec\(',
         r'__import__', r'subprocess', r'os\.system'
     ]
 

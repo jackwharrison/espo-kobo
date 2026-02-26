@@ -11,7 +11,6 @@ from extension_generator import build_entity_files
 from validators import validate_package_safety, ValidationError
 from espo_api import deploy_entity_to_espo, EspoAPIError
 
-
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -297,6 +296,7 @@ def generate_package():
             kobo_asset_id = data.get('koboAssetId', '').strip()
             kobo_token = data.get('koboToken', '').strip()
             kobo_url = data.get('koboUrl', 'https://kobo.ifrc.org').strip()
+            setup_rest_service = data.get('setupRestService', 'false') == 'true'
             
             if not kobo_asset_id or not kobo_token:
                 return jsonify({'error': 'Missing Kobo Asset ID or API Token'}), 400
@@ -308,7 +308,11 @@ def generate_package():
             entity_name = kobo_data.get('name', 'KoboForm')
             kobo_forms.append({
                 'data': kobo_data,
-                'entity_name': entity_name
+                'entity_name': entity_name,
+                'asset_id': kobo_asset_id,
+                'kobo_url': kobo_url,
+                'kobo_token': kobo_token,
+                'setup_rest_service': setup_rest_service
             })
         
         else:
@@ -331,14 +335,90 @@ def generate_package():
                 all_entity_files.update(entity_files)
                 entity_names.append(entity_name)
                 
+                # Store sanitized entity name for REST service setup
+                form_info['sanitized_entity_name'] = entity_name
+                
             except ValidationError as e:
                 errors.append({'entity': form_info['entity_name'], 'error': str(e)})
         
         if not entity_names:
+            # All files failed
+            error_details = "\n".join([f"• {e['entity']}: {e['error']}" for e in errors])
             return jsonify({
-                'error': 'No extension could be generated',
-                'details': errors
+                'error': 'No valid entities could be generated from the uploaded files',
+                'details': errors,
+                'message': f"All {len(errors)} file(s) failed to process:\n{error_details}"
             }), 400
+        
+        # Log success and failures
+        print(f"\n{'='*80}")
+        print(f"PACKAGE GENERATION SUMMARY")
+        print(f"{'='*80}")
+        print(f"✓ Successful: {len(entity_names)} entity/entities")
+        for name in entity_names:
+            print(f"  - {name}")
+        if errors:
+            print(f"✗ Failed: {len(errors)} file(s)")
+            for err in errors:
+                print(f"  - {err['entity']}: {err['error']}")
+        print(f"{'='*80}\n")
+        
+        # If there were failures, log a warning message
+        if errors:
+            logger.warning(f"Partial success: {len(entity_names)} succeeded, {len(errors)} failed")
+            logger.warning(f"Failed entities: {', '.join([e['entity'] for e in errors])}")
+        
+        # Setup REST service if requested (only for Kobo API source)
+        for form_info in kobo_forms:
+            if form_info.get('setup_rest_service'):
+                try:
+                    from kobo_connect_setup import setup_kobo_connect_rest_service, get_field_mapping_from_kobo_data
+                    
+                    print(f"\n[REST SERVICE] Setting up Kobo Connect for {form_info['sanitized_entity_name']}...")
+                    
+                    # Generate field mapping
+                    field_mapping = get_field_mapping_from_kobo_data(
+                        form_info['data'],
+                        form_info['sanitized_entity_name']
+                    )
+                    
+                    # Check if _id is being mapped to name (means no name field exists)
+                    using_kobo_id_for_name = '_id' in field_mapping and field_mapping['_id'] == 'name'
+                    
+                    # If using Kobo ID for name, rebuild the entity files with updated label
+                    if using_kobo_id_for_name:
+                        print(f"  No 'name' field found - using Kobo _id and labeling as 'Kobo ID'")
+                        # Rebuild entity files with Kobo ID label
+                        entity_files = build_entity_files(
+                            form_info['data'],
+                            form_info['sanitized_entity_name'],
+                            use_kobo_id_for_name=True
+                        )
+                        # Update the zip with new files
+                        all_entity_files.update(entity_files)
+                    
+                    # Setup REST service with placeholder values
+                    rest_service = setup_kobo_connect_rest_service(
+                        kobo_url=form_info['kobo_url'],
+                        api_token=form_info['kobo_token'],
+                        asset_id=form_info['asset_id'],
+                        entity_name=form_info['sanitized_entity_name'],
+                        field_mapping=field_mapping,
+                        espo_url=None,  # Will use placeholder
+                        espo_api_key=None  # Will use placeholder
+                    )
+                    
+                    print(f"✓ REST service created with placeholders")
+                    print(f"  Service ID: {rest_service.get('uid')}")
+                    if using_kobo_id_for_name:
+                        print(f"  Note: Kobo _id will populate the 'Kobo ID' field in EspoCRM")
+                    print(f"  User must update targetkey and targeturl in Kobo")
+                
+                except Exception as e:
+                    print(f"\n✗ Warning: Failed to setup REST service: {str(e)}")
+                    import traceback
+                    traceback.print_exc()
+        
         
         # Create single zip with all entities
         temp_dir = tempfile.mkdtemp()

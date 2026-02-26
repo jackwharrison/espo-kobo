@@ -8,7 +8,7 @@ import requests
 import json
 
 
-def setup_kobo_connect_rest_service(kobo_url, api_token, asset_id, entity_name, field_mapping, espo_url, espo_api_key):
+def setup_kobo_connect_rest_service(kobo_url, api_token, asset_id, entity_name, field_mapping, espo_url=None, espo_api_key=None):
     """
     Set up a REST service in Kobo that uses Kobo Connect to push submissions to EspoCRM.
     
@@ -19,15 +19,20 @@ def setup_kobo_connect_rest_service(kobo_url, api_token, asset_id, entity_name, 
         entity_name: EspoCRM entity name (with C prefix, e.g., 'CChadDemo')
         field_mapping: Dict mapping Kobo field names to EspoCRM field names
             Example: {'Name': 'name', 'Date_of_Birth': 'dateOfBirth'}
-        espo_url: EspoCRM instance URL (will add trailing slash if missing)
-        espo_api_key: EspoCRM API key for authentication
+        espo_url: EspoCRM instance URL (optional - will use placeholder if not provided)
+        espo_api_key: EspoCRM API key (optional - will use placeholder if not provided)
     
     Returns:
         dict with service details
     """
-    # Ensure espo_url has trailing slash
-    if not espo_url.endswith('/'):
+    # Use placeholders if actual values not provided
+    if not espo_url:
+        espo_url = 'YOUR-ESPO-INSTANCE/'
+    elif not espo_url.endswith('/'):
         espo_url += '/'
+    
+    if not espo_api_key:
+        espo_api_key = 'YOUR-API-KEY'
     
     # Build custom HTTP headers for Kobo Connect
     # Format: Kobo_field_name -> EntityName.espoFieldName
@@ -107,6 +112,7 @@ def get_field_mapping_from_kobo_data(kobo_data, entity_name):
     
     field_mapping = {}
     survey_questions = kobo_data.get('content', {}).get('survey', [])
+    has_name_field = False
     
     for question in survey_questions:
         q_type = question.get('type', '')
@@ -115,6 +121,10 @@ def get_field_mapping_from_kobo_data(kobo_data, entity_name):
         # Skip if no name
         if not q_name or not q_name.strip():
             continue
+        
+        # Check if there's a 'name' field
+        if q_name.lower() == 'name':
+            has_name_field = True
         
         # Skip unsupported types
         if q_type in UNSUPPORTED_FIELD_TYPES or q_type not in SUPPORTED_FIELD_TYPES:
@@ -127,9 +137,9 @@ def get_field_mapping_from_kobo_data(kobo_data, entity_name):
         except:
             continue
     
-    # Always include the name field
-    if 'name' not in field_mapping:
-        field_mapping['name'] = 'name'
+    # If no 'name' field exists, map Kobo's _id to name
+    if not has_name_field:
+        field_mapping['_id'] = 'name'
     
     return field_mapping
 
